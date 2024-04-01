@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 300px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="button"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        input[type="button"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="button"]:hover {
+            background-color: #45a049;
+        }
+
+        .error-msg {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        #uploadPage {
+            margin-top: 20px;
+        }
+
+        .upload-form,
+        .stored-files-container {
+            text-align: center;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button,.generate-btn,
+        .display-files-button {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .upload-button:hover,
+        .display-files-button:hover {
+            background-color: #45a049;
+        }
+
+        #fileListContainer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            /* Initially hidden */
+        }
+
+        #fileListContainer h3 {
+            text-align: center;
+        }
+
+        #fileList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #fileList li {
+            margin-bottom: 5px;
+        }
+
+        .download-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-left: 5px;
+            border-radius: 3px;
+        }
+
+        .download-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="loginContainer">
+        <h2>Sign In</h2>
+        <div id="registerForm">
+            <h3>Register</h3>
+            <input type="text" id="registerEmail" placeholder="Email">
+            <input type="password" id="registerPassword" placeholder="Password">
+            <input type="password" id="confirmPassword" placeholder="Confirm Password">
+            <input type="button" value="Verify" onclick="register()">
+        </div>
+        <div id="loginForm" style="display: none;">
+            <h3>Login</h3>
+            <input type="text" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <input type="button" value="Login" onclick="login()">
+        </div>
+        <p class="error-msg" id="errorMsg"></p>
+        <p id="accountLabel" style="text-align: center;">Already have an account? <a href="#"
+                onclick="toggleForms()">Login here</a>.</p>
+    </div>
+
+    <div class="container" id="uploadPage" style="display: none;">
+        <h2>Upload File</h2>
+        <div class="upload-form">
+            <label for="fileInput" class="upload-button">Select File</label>
+            <input type="file" id="fileInput" class="file-input" onchange="showFileName()">
+            <p id="fileName" style="display: none;"></p>
+            <br>
+            <br>
+            <br>
+            <input type="button" value="Upload" onclick="uploadFile()" class="upload-button">
+            <br>
+            <br>
+            <button id="generateBtn" class="generate-btn" style="display: none;" onclick="generateAndDownload()">Generate</button>
+        </div>
+        <button id="displayStoredFilesBtn" style="display: none;" class="display-files-button"
+            onclick="displayStoredFiles()">Display Stored Files</button>
+        <div id="fileListContainer">
+            <h3>Stored Files:</h3>
+            <ul id="fileList"></ul>
+        </div>
+    </div>
+
+    <script>
+        function toggleForms() {
+            var registerForm = document.getElementById("registerForm");
+            var loginForm = document.getElementById("loginForm");
+            var accountLabel = document.getElementById("accountLabel");
+            if (registerForm.style.display === "none") {
+                registerForm.style.display = "block";
+                loginForm.style.display = "none";
+                accountLabel.style.display = "block";
+            } else {
+                registerForm.style.display = "none";
+                loginForm.style.display = "block";
+                accountLabel.style.display = "none";
+            }
+        }
+
+        function validateEmail(email) {
+            var re = /\S+@\S+\.\S+/;
+            return re.test(email);
+        }
+
+        function register() {
+            var email = document.getElementById("registerEmail").value;
+            var password = document.getElementById("registerPassword").value;
+            var confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (email.trim() === "" || password.trim() === "" || confirmPassword.trim() === "") {
+                document.getElementById("errorMsg").innerText = "Please fill all fields.";
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                document.getElementById("errorMsg").innerText = "Invalid email format.";
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                document.getElementById("errorMsg").innerText = "Passwords do not match.";
+                return;
+            }
+
+            fetch(`http://127.0.0.1:8000/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Registration failed.');
+                    }
+                    console.log('Registration successful.');
+
+                    showDisplayStoredFilesBtn();
+
+                    document.getElementById("loginContainer").style.display = "none";
+                    document.getElementById("uploadPage").style.display = "block";
+                })
+                .catch(error => {
+                    console.error('Error registering user:', error.message);
+                });
+        }
+
+        function login() {
+            var email = document.getElementById("loginEmail").value;
+            var password = document.getElementById("loginPassword").value;
+
+            if (email.trim() === "" || password.trim() === "") {
+                document.getElementById("errorMsg").innerText = "Please fill all fields.";
+                return;
+            }
+
+            fetch(`http://127.0.0.1:8000/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Login failed.');
+                    }
+                    console.log('Login successful.');
+
+                    showDisplayStoredFilesBtn();
+
+                    document.getElementById("loginContainer").style.display = "none";
+                    document.getElementById("uploadPage").style.display = "block";
+                })
+                .catch(error => {
+                    console.error('Error logging in:', error.message);
+                });
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    alert(responseData.message);
+                } else {
+                    throw new Error('Failed to upload file.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error.message);
+            }
+        }
+
+        function showFileName() {
+            const fileInput = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            fileName.innerText = `Selected file: ${fileInput.files[0].name}`;
+            fileName.style.display = 'block';
+        }
+
+        async function downloadFile(fileName) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/download/${fileName}`);
+                if (response.ok) {
+                    // Convert the response to a Blob
+                    const fileBlob = await response.blob();
+                    
+                    // Create a temporary anchor element
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(fileBlob);
+                    link.download = fileName;
+                    link.click();
+                    
+                    // Clean up
+                    window.URL.revokeObjectURL(link.href);
+                } else {
+                    throw new Error('Failed to download file.');
+                }
+            } catch (error) {
+                console.error('Error downloading file:', error.message);
+                alert('Error downloading file.');
+            }
+        }
+
+    
+
+
+        // Function to display stored files and their download buttons
+        function displayStoredFiles() {
+            fetch('http://127.0.0.1:8000/files/')
+                .then(response => response.json())
+                .then(data => {
+                    const fileList = document.getElementById('fileList');
+                    fileList.innerHTML = ''; // Clear previous list
+                    data.files.forEach(file => {
+                        const li = document.createElement('li');
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.innerText = 'Download';
+                        downloadBtn.className = 'download-button';
+                        downloadBtn.onclick = () => downloadFile(file); // Call downloadFile with file name as argument
+                        li.textContent = file;
+                        li.appendChild(downloadBtn);
+                        fileList.appendChild(li);
+                    });
+                    document.getElementById('fileListContainer').style.display = 'block'; // Show the container after fetching files
+                })
+                .catch(error => {
+                    console.error('Error fetching stored files:', error);
+                    alert('Error fetching stored files.');
+                });
+        }
+
+        // Function to show the "Display Stored Files" button
+        function showDisplayStoredFilesBtn() {
+            const displayStoredFilesBtn = document.getElementById('displayStoredFilesBtn');
+            displayStoredFilesBtn.style.display = 'block';
+        }
+
+        // Function to hide the "Display Stored Files" button
+        function hideDisplayStoredFilesBtn() {
+            const displayStoredFilesBtn = document.getElementById('displayStoredFilesBtn');
+            displayStoredFilesBtn.style.display = 'none';
+        }
+
+        function displayStoredFiles() {
+    fetch('http://127.0.0.1:8000/files/')
+        .then(response => response.json())
+        .then(data => {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = ''; // Clear previous list
+            data.files.forEach(file => {
+                const li = document.createElement('li');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'selectedFiles';
+                checkbox.value = file;
+                checkbox.onclick = toggleCheckbox; // Call toggleCheckbox when checkbox is clicked
+                li.textContent = file;
+                li.prepend(checkbox);
+                fileList.appendChild(li);
+            });
+            document.getElementById('fileListContainer').style.display = 'block'; // Show the container after fetching files
+        })
+        .catch(error => {
+            console.error('Error fetching stored files:', error);
+            alert('Error fetching stored files.');
+        });
+}
+
+// Add a toggleCheckbox function to enable/disable the Generate button
+function toggleCheckbox() {
+    const generateBtn = document.getElementById('generateBtn');
+    const checkboxes = document.querySelectorAll('input[name="selectedFiles"]');
+    const checkedCheckboxes = Array.from(checkboxes).filter(checkbox => checkbox.checked);
+
+    if (checkedCheckboxes.length > 0) {
+        generateBtn.style.display = 'inline-block';
+    } else {
+        generateBtn.style.display = 'none';
+    }
+}
+
+// Update the generateAndDownload function to send selected file names to the backend
+function generateAndDownload() {
+    const selectedFiles = Array.from(document.querySelectorAll('input[name="selectedFiles"]:checked')).map(checkbox => checkbox.value);
+
+    if (selectedFiles.length === 0) {
+        alert('Please select at least one file.');
+        return;
+    }
+
+    fetch('http://127.0.0.1:8000/concatenate-generate-download', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(selectedFiles)
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to generate concatenated file.');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'concatenated_file.docx'; // Change the file extension to .docx
+            link.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Error generating concatenated file:', error.message);
+            alert('Error generating concatenated file.');
+        });
+}
+
+
+        
+    </script>
+</body>
+
+</html>
